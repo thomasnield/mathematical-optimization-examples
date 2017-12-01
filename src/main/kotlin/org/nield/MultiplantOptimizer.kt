@@ -1,5 +1,6 @@
 package org.nield
 
+
 import org.ojalgo.optimisation.ExpressionsBasedModel
 import org.ojalgo.optimisation.Variable
 import java.util.concurrent.atomic.AtomicInteger
@@ -12,7 +13,7 @@ val model = ExpressionsBasedModel()
 val funcId = AtomicInteger(0)
 val variableId = AtomicInteger(0)
 fun variable() = Variable(variableId.incrementAndGet().toString().let { "Variable$it" }).apply(model::addVariable)
-fun ExpressionsBasedModel.addExpression() = funcId.incrementAndGet().let { "Func$it"}.let { addExpression(it) }
+fun addExpression() = funcId.incrementAndGet().let { "Func$it"}.let { model.addExpression(it) }
 
 
 fun main(args: Array<String>) {
@@ -41,10 +42,23 @@ enum class Factory(val rawAllocation: Int? = null, val capacities: Map<Process,I
         rawAllocation = 45
     );
 
-    val optimalQuantities = Product.values().asSequence().map { it to variable().weight(it.profitContr) }.toMap()
+    val quantities = Product.values().asSequence()
+            .map { it to variable().weight(it.profitContr).lower(0) }
+            .toMap()
 
     fun addToModel() {
 
+        /**
+         * R = raw rate
+         * A = Allocated raw
+         *
+         * R1X1 + R2
+         */
+        quantities.forEach {
+            addExpression()
+                    .lower(rawAllocation)
+                    .set(it.value, it.key.rawMaterial)
+        }
     }
 }
 
