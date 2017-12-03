@@ -2,6 +2,7 @@ package org.nield.ch4_2
 
 import org.ojalgo.optimisation.ExpressionsBasedModel
 import org.ojalgo.optimisation.Variable
+import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicInteger
 
 
@@ -24,6 +25,7 @@ fun main(args: Array<String>) {
     println("Maximized profit: ${solution.value}")
 
     Factory.values().forEach { factory ->
+        println("\r\nFactory ${factory.name} used ${factory.rawUsed} of raw material, generated ${factory.profitGenerated} of profit")
         factory.quantities.forEach {
             println("Factory ${factory.name} ${it.key} = ${it.value.value}")
         }
@@ -72,6 +74,10 @@ enum class Factory(val capacities: Map<Process,Int>, val rates: Map<PPKey, Int>)
     val quantities = Product.values().asSequence()
             .map { it to variable().weight(it.profitContr).lower(0) }
             .toMap()
+
+    val rawUsed get() = quantities.asSequence().map { it.key.rawMaterial * it.value.value.toDouble() }.sum()
+
+    val profitGenerated get() = quantities.asSequence().map { it.key.profitContr * it.value.value.toDouble() }.sum()
 
     fun addToModel() {
 

@@ -24,6 +24,7 @@ fun main(args: Array<String>) {
     println("Maximized profit: ${solution.value}")
 
     Factory.values().forEach { factory ->
+        println("\r\nFactory ${factory.name} used ${factory.rawUsed} of raw material, generated ${factory.profitGenerated} of profit")
         factory.quantities.forEach {
             println("Factory ${factory.name} ${it.key} = ${it.value.value}")
         }
@@ -58,6 +59,10 @@ enum class Factory(val rawAllocation: Int? = null, val capacities: Map<Process,I
     val quantities = Product.values().asSequence()
             .map { it to variable().weight(it.profitContr).lower(0) }
             .toMap()
+
+    val rawUsed get() = quantities.asSequence().map { it.key.rawMaterial * it.value.value.toDouble() }.sum()
+
+    val profitGenerated get() = quantities.asSequence().map { it.key.profitContr * it.value.value.toDouble() }.sum()
 
     fun addToModel() {
 
