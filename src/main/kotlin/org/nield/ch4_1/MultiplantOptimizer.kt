@@ -1,5 +1,4 @@
-package org.nield
-
+package org.nield.ch4_1
 
 import org.ojalgo.optimisation.ExpressionsBasedModel
 import org.ojalgo.optimisation.Variable
@@ -17,47 +16,71 @@ fun addExpression() = funcId.incrementAndGet().let { "Func$it"}.let { model.addE
 
 
 fun main(args: Array<String>) {
-	println("Hello world!")
+
+
+    model.maximise()
+
+    Factory.values().forEach {
+        println(it.quantities)
+    }
 }
 
 val rawMaterial = 120 // kg
 
 enum class Factory(val rawAllocation: Int? = null, val capacities: Map<Process,Int>, val rates: Map<PPKey, Int>) {
     A(capacities = mapOf(Process.GRINDING to 80, Process.POLISHING to 60),
+
         rates = mapOf(
                 PPKey(Product.STANDARD, Process.GRINDING) to 4,
                 PPKey(Product.STANDARD, Process.POLISHING) to 2,
                 PPKey(Product.DELUXE, Process.GRINDING) to 2,
                 PPKey(Product.DELUXE, Process.POLISHING) to 5
         ),
+
         rawAllocation = 75
     ),
     B(capacities = mapOf(Process.GRINDING to 60, Process.POLISHING to 75),
+
         rates = mapOf(
                 PPKey(Product.STANDARD, Process.GRINDING) to 5,
                 PPKey(Product.STANDARD, Process.POLISHING) to 5,
                 PPKey(Product.DELUXE, Process.GRINDING) to 3,
                 PPKey(Product.DELUXE, Process.POLISHING) to 6
         ),
+
         rawAllocation = 45
     );
 
+    // quantity variables to be optimized for this factory, weighted with profit contribution, can't be negative
     val quantities = Product.values().asSequence()
             .map { it to variable().weight(it.profitContr).lower(0) }
             .toMap()
 
     fun addToModel() {
 
-        /**
-         * R = raw rate
-         * A = Allocated raw
-         *
-         * R1X1 + R2
-         */
-        quantities.forEach {
-            addExpression()
-                    .lower(rawAllocation)
-                    .set(it.value, it.key.rawMaterial)
+        // allocation constraints
+        addExpression().upper(rawAllocation).apply {
+            quantities.forEach {
+                val product = it.key
+                val variable = it.value
+                set(variable, product.rawMaterial)
+            }
+        }
+
+
+        //process capacity constraints
+        capacities.forEach {
+            val process = it.key
+            val processCapacity = it.value
+            addExpression().upper(processCapacity).apply  {
+
+                quantities.forEach {
+                    val product = it.key
+                    val variable = it.value
+
+                    set(variable, rates[PPKey(product,process)])
+                }
+            }
         }
     }
 }
