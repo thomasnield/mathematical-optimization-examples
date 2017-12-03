@@ -41,7 +41,7 @@
         </dependency>
         <dependency>
             <groupId>org.optaplanner</groupId>
-            <artifactId>optaplanner-bom</artifactId>
+            <artifactId>optaplanner-core</artifactId>
             <version>7.4.1.Final</version>
         </dependency>
     </dependencies>
