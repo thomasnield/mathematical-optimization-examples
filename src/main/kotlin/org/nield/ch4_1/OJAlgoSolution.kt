@@ -17,11 +17,16 @@ fun addExpression() = funcId.incrementAndGet().let { "Func$it"}.let { model.addE
 
 fun main(args: Array<String>) {
 
+    Factory.values().forEach { it.addToModel() }
 
-    model.maximise()
+    val solution = model.maximise()
 
-    Factory.values().forEach {
-        println(it.quantities)
+    println("Maximized profit: ${solution.value}")
+
+    Factory.values().forEach { factory ->
+        factory.quantities.forEach {
+            println("Factory ${factory.name} ${it.key} = ${it.value.value}")
+        }
     }
 }
 
