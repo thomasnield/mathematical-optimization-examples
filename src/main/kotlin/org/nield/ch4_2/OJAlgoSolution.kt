@@ -1,4 +1,4 @@
-package org.nield.ch4_1
+package org.nield.ch4_2
 
 import org.ojalgo.optimisation.ExpressionsBasedModel
 import org.ojalgo.optimisation.Variable
@@ -17,10 +17,10 @@ fun addExpression() = funcId.incrementAndGet().let { "Func$it"}.let { model.addE
 
 fun main(args: Array<String>) {
 
+    addSystemConstraints()
     Factory.values().forEach { it.addToModel() }
 
     val solution = model.maximise()
-
     println("Maximized profit: ${solution.value}")
 
     Factory.values().forEach { factory ->
@@ -30,7 +30,25 @@ fun main(args: Array<String>) {
     }
 }
 
-enum class Factory(val rawAllocation: Int? = null, val capacities: Map<Process,Int>, val rates: Map<PPKey, Int>) {
+val rawMaterial = 120 // kg
+
+
+fun addSystemConstraints() {
+    // allocation constraints
+    addExpression().upper(rawMaterial).apply {
+
+        Factory.values().asSequence()
+                .flatMap { it.quantities.asSequence() }
+                .forEach {
+                    val product = it.key
+                    val variable = it.value
+                    set(variable, product.rawMaterial)
+                }
+    }
+}
+
+
+enum class Factory(val capacities: Map<Process,Int>, val rates: Map<PPKey, Int>) {
     A(capacities = mapOf(Process.GRINDING to 80, Process.POLISHING to 60),
 
         rates = mapOf(
@@ -38,9 +56,7 @@ enum class Factory(val rawAllocation: Int? = null, val capacities: Map<Process,I
                 PPKey(Product.STANDARD, Process.POLISHING) to 2,
                 PPKey(Product.DELUXE, Process.GRINDING) to 2,
                 PPKey(Product.DELUXE, Process.POLISHING) to 5
-        ),
-
-        rawAllocation = 75
+        )
     ),
     B(capacities = mapOf(Process.GRINDING to 60, Process.POLISHING to 75),
 
@@ -49,9 +65,7 @@ enum class Factory(val rawAllocation: Int? = null, val capacities: Map<Process,I
                 PPKey(Product.STANDARD, Process.POLISHING) to 5,
                 PPKey(Product.DELUXE, Process.GRINDING) to 3,
                 PPKey(Product.DELUXE, Process.POLISHING) to 6
-        ),
-
-        rawAllocation = 45
+        )
     );
 
     // quantity variables to be optimized for this factory, weighted with profit contribution, can't be negative
@@ -60,16 +74,6 @@ enum class Factory(val rawAllocation: Int? = null, val capacities: Map<Process,I
             .toMap()
 
     fun addToModel() {
-
-        // allocation constraints
-        addExpression().upper(rawAllocation).apply {
-            quantities.forEach {
-                val product = it.key
-                val variable = it.value
-                set(variable, product.rawMaterial)
-            }
-        }
-
 
         //process capacity constraints
         capacities.forEach {
