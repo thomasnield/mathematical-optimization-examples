@@ -17,24 +17,26 @@ fun addExpression() = funcId.incrementAndGet().let { "Func$it"}.let { model.addE
 
 
 
-enum class Oil(val isVegetable: Boolean, val processLimit: Int, val hardness: Double) {
-    VEG1(true, 200, 8.8),
-    VEG2(true, 200, 6.1),
-    OIL1(false, 250, 2.0),
-    OIL2(false, 250, 4.2),
-    OIL3(false, 250, 5.0)
+enum class Oil(val isVegetable: Boolean, val hardness: Double) {
+    VEG1(true, 8.8),
+    VEG2(true, 6.1),
+    OIL1(false, 2.0),
+    OIL2(false, 4.2),
+    OIL3(false, 5.0)
 }
 
 val finalProductPrice = 150
 val storageCapacity = 1000
 val rawStorageRate = 5 // per ton per month
 
+val vegProcessingLimit = 200
+val nonVegProcessingLimit = 250
+
 val finalProductHardnessLimit = 3.0..6.0
 
 data class ProductionPlan(val month: Month, val oil: Oil, val price: Int) {
-    val quantity = variable().lower(0).upper(oil.processLimit)
+    val quantity = variable().lower(0)
 }
-
 
 
 val prices = listOf(
